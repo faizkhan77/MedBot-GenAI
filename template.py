@@ -33,7 +33,7 @@ Here we will write all the functionalities like extract info, download the huggi
 Inside this we will write the prompt which we will feed to the LLM
 
 4. setup.py:
-Our main setup where we will import dependencies and write the code
+Setup where we will define our dependencies from src folder
 
 5. trials.ipynb:
 The Jupyter Notebook where we will try first before writing everything down in setup.py
