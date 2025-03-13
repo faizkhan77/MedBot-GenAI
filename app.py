@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 from src.prompt import *
 import os
 
+#### *NEW FOR RETAINING PAST MEMORY ####
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
+
 
 app = Flask(__name__)
 
@@ -31,6 +35,8 @@ docsearch = PineconeVectorStore.from_existing_index(
 
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
+# ✅ Create Memory for Conversational Context
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
 prompt = ChatPromptTemplate.from_messages(
@@ -40,8 +46,12 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-question_answer_chain = create_stuff_documents_chain(model, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+# question_answer_chain = create_stuff_documents_chain(model, prompt)
+# rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+rag_chain = ConversationalRetrievalChain.from_llm(
+    llm=model, retriever=retriever, memory=memory
+)
 
 
 @app.route("/")
@@ -49,12 +59,28 @@ def index():
     return render_template("chat.html")
 
 
+# @app.route("/get", methods=["GET", "POST"])
+# def chat():
+#     msg = request.form["msg"]
+#     input = msg
+#     print(input)
+#     response = rag_chain.invoke({"input": msg})
+#     print("Response : ", response["answer"])
+#     return str(response["answer"])
+
+
 @app.route("/get", methods=["GET", "POST"])
 def chat():
     msg = request.form["msg"]
-    input = msg
-    print(input)
-    response = rag_chain.invoke({"input": msg})
+    response = rag_chain.invoke(
+        {
+            "question": msg,
+            "chat_history": memory.load_memory_variables({})[
+                "chat_history"
+            ],  # Pass chat history
+        }
+    )
+
     print("Response : ", response["answer"])
     return str(response["answer"])
 
