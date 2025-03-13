@@ -42,7 +42,8 @@ The Jupyter Notebook where we will try first before writing everything down in s
 list_of_files = [
     "src/__init__.py",
     "src/helper.py",
-    "src/prompt.py" ".env",
+    "src/prompt.py",
+    ".env",
     "setup.py",
     "app.py",
     "research/trials.ipynb",
